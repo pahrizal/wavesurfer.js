@@ -211,12 +211,10 @@ class RecordPlugin extends BasePlugin<RecordPluginEvents, RecordPluginOptions> {
   }
 
   /** Request access to the microphone and start monitoring incoming audio */
-  public async startMic(options?: RecordPluginDeviceOptions): Promise<MediaStream> {
+  public async startMic(options?: MediaStreamConstraints): Promise<MediaStream> {
     let stream: MediaStream
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        audio: options?.deviceId ? { deviceId: options.deviceId } : true,
-      })
+      stream = await navigator.mediaDevices.getUserMedia(options)
     } catch (err) {
       throw new Error('Error accessing the microphone: ' + (err as Error).message)
     }
@@ -238,8 +236,9 @@ class RecordPlugin extends BasePlugin<RecordPluginEvents, RecordPluginOptions> {
   }
 
   /** Start recording audio from the microphone */
-  public async startRecording(options?: RecordPluginDeviceOptions) {
-    const stream = this.stream || (await this.startMic(options))
+  public async startRecording(options?: MediaStreamConstraints) {
+    this.stopMic();
+    const stream = await this.startMic(options)
     this.dataWindow = null
     const mediaRecorder =
       this.mediaRecorder ||
